@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                   String         @id @default(cuid())
+  email                String         @unique
+  password             String
+  name                 String
+  role                 String         @default("USER") // USER or ADMIN
+  educationLevel       String?        // high_school, undergraduate, graduate, professional
+  userType             String?        // student, researcher, writer, other
+  defaultTone          String         @default("academic")
+  onboarded            Boolean        @default(false)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  conversations        Conversation[]
+}
+
+model Conversation {
+  id                   String    @id @default(cuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title                String
+  tone                 String    @default("academic") // academic, formal, informal
+  synonymIntensity     Float     @default(0.2) // 0.0-1.0, controls synonym replacement
+  transitionFrequency  Float     @default(0.2) // 0.0-1.0, controls academic transitions
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  messages             Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  type           String       // USER_INPUT, ANALYSIS_RESULT, REPHRASED
+  content        String
+  analysisData   String?      // JSON stored as string
+  charCount      Int          @default(0)
+  createdAt      DateTime     @default(now())
+}
+
+model SystemSettings {
+  id                  String   @id @default("default")
+  llmApiUrl           String   @default("http://127.0.0.1:5000/v1")
+  llmModel            String   @default("default")
+  maxTokens           Int      @default(4096)
+  temperature         Float    @default(0.3)
+  rephraseTemperature Float    @default(0.8)
+  topP                Float    @default(0.9)
+  detectionApiUrl     String   @default("http://127.0.0.1:5000/detection")
+  plagiarismApiUrl    String   @default("http://127.0.0.1:5000/plagiarism")
+  updatedAt           DateTime @updatedAt
+}
+
+model WhatsAppUser {
+  phoneNumber          String        @id
+  isBlocked            Boolean       @default(false)
+  isAdmin              Boolean       @default(false)
+  synonymIntensity     Float         @default(0.2)
+  transitionFrequency  Float         @default(0.2)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  logs                 WhatsAppLog[]
+}
+
+model WhatsAppLog {
+  id              String       @id @default(cuid())
+  phoneNumber     String
+  user            WhatsAppUser @relation(fields: [phoneNumber], references: [phoneNumber], onDelete: Cascade)
+  command         String       // /aicheck, /rephrase, etc.
+  content         String       // The text processed
+  processedAt     DateTime     @default(now())
+  processingTime  Int?         // in ms
+}

@@ -1,0 +1,11 @@
+nltk
+spacy
+streamlit
+fastapi
+uvicorn
+pydantic
+onnxruntime
+numpy
+transformers
+torch
+scipy
