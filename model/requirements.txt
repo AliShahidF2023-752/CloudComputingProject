@@ -1,7 +1,7 @@
 # AI Service Dependencies
 fastapi>=0.109.0
 uvicorn>=0.27.0
-torch==2.1.2+cpu --index-url https://download.pytorch.org/whl/cpu
+torch>=2.1.2
 transformers>=4.36.0
 pydantic>=2.5.0
 
