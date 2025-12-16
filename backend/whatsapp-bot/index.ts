@@ -12,7 +12,10 @@ const API_BASE = `${FRONTEND_URL}/api/integration/whatsapp`;
 
 // Initialize Client
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth({
+        clientId: 'contentguard',
+        dataPath: process.env.WHATSAPP_AUTH_PATH || './.wwebjs_auth'
+    }),
     puppeteer: {
         args: [
             '--no-sandbox',
