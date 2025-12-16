@@ -1,0 +1,39 @@
+# Use Python 3.10 slim as base
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies and Chrome
+# Method: Install wget/gnupg, add Google Chrome repo, install Google Chrome
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    gnupg \
+    unzip \
+    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list' \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY plagiarism_api.py .
+
+# Download NLTK data during build to avoid downloading at runtime
+RUN python -m nltk.downloader punkt punkt_tab
+
+# Expose port
+EXPOSE 5000
+
+# Environment variables for optimizations
+ENV PYTHONUNBUFFERED=1
+
+# Run with Gunicorn for production, or direct python if preferred for simple threading
+# Using direct python as the script has its own threaded run config and we want to keep it simple first
+CMD ["python", "plagiarism_api.py"]
