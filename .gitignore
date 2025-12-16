@@ -1,4 +1,4 @@
-backend/whatsapp-bot/node_modules
-backend/detectors/__pycache__
-frontend/node_modules
+backend/whatsapp-bot/node_modules/
+backend/detectors/__pycache__/
+frontend/node_modules/
 frontend/.env
