@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 
 // GET /api/admin/whatsapp/users - List users with stats
 export async function GET(req: NextRequest) {
-    // Ideally check for Admin role here using session
-    // const session = await getServerSession(authOptions)
-    // if (session?.user?.role !== 'ADMIN') return NextResponse.json({error: 'Unauthorized'}, {status: 401})
+    // Check for Admin role
+    const session = await getSession()
+    if (session?.role !== 'ADMIN') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     try {
         const users = await prisma.whatsAppUser.findMany({
