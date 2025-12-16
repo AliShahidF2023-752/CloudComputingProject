@@ -3,8 +3,20 @@ const { Client, LocalAuth } = pkg;
 import qrcode from 'qrcode-terminal';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import express from 'express';
 
 dotenv.config();
+
+// Health Check Server
+const app = express();
+const port = process.env.PORT || 8080;
+
+app.get('/', (req, res) => res.send('WhatsApp Bot Active'));
+app.get('/health', (req, res) => res.send('OK'));
+
+app.listen(port, () => {
+    console.log(`Health check server listening on port ${port}`);
+});
 
 // Configuration
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
