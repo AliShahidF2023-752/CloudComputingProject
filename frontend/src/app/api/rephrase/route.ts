@@ -60,11 +60,11 @@ export async function POST(request: NextRequest) {
         // So we need to go ../backend/detectors/humanize_cli.py
         const scriptPath = path.join(process.cwd(), '..', 'backend', 'detectors', 'humanize_cli.py');
 
-        // Use configured PYTHON_PATH or fallback to the specific working path found on system
-        // We use /opt/homebrew/bin/python3 for M1/M2 Mac compatibility (ARM64)
-        const pythonCmd = process.env.PYTHON_PATH || '/opt/homebrew/bin/python3';
 
+
+        const pythonCmd = process.env.PYTHON_PATH || 'python3';
         const pythonProcess = spawn(pythonCmd, [scriptPath]);
+
 
         const inputData = JSON.stringify({
             text: content,
