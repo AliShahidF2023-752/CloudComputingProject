@@ -6,7 +6,7 @@ apt-get update
 apt-get install -y python3 python3-pip
 
 # Install Python dependencies
-pip3 install -r backend/detectors/requirements.txt
+pip3 install -r ../backend/detectors/requirements.txt
 
 # Download NLTK / Spacy data if needed
 python3 - <<EOF
