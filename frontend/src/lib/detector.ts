@@ -102,7 +102,7 @@ export async function detectAI(text: string): Promise<AnalysisResult> {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text }),
             // Python server might take time to process parallel requests
-            signal: AbortSignal.timeout(60000) // 60s timeout
+            signal: AbortSignal.timeout(300000) // 5min timeout
         })
 
         if (plagRes.ok) {
