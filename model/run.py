@@ -1,5 +1,7 @@
 import torch
 import re
+import os
+from pathlib import Path
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import pipeline
@@ -10,11 +12,12 @@ from utils import clean_text
 # =========================
 # Device
 # =========================
-DEVICE = 0 if torch.cuda.is_available() else -1
+DEVICE = -1
 
 # =========================
 # Model
 # =========================
+# Download model directly from Hugging Face (avoids local file issues)
 classifier = pipeline(
     "text-classification",
     model="fakespot-ai/roberta-base-ai-text-detection-v1",

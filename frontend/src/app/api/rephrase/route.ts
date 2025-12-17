@@ -55,14 +55,13 @@ export async function POST(request: NextRequest) {
         const { spawn } = await import('child_process');
         const path = await import('path');
 
-        // Since we moved the frontend code to 'frontend/', we need to go up one level to reach 'backend/'
-        // process.cwd() in Next.js usually points to the root of the project (frontend dir now)
-        // So we need to go ../backend/detectors/humanize_cli.py
-        const scriptPath = path.join(process.cwd(), '..', 'backend', 'detectors', 'humanize_cli.py');
+        // Since we moved detectors to 'frontend/detectors'
+        // process.cwd() in Next.js points to the root of the project (frontend dir)
+        const scriptPath = path.join(process.cwd(), 'detectors', 'humanize_cli.py');
 
 
 
-        const pythonCmd = process.env.PYTHON_PATH || 'python3';
+        const pythonCmd = process.env.PYTHON_PATH || 'python';
         const pythonProcess = spawn(pythonCmd, [scriptPath]);
 
 

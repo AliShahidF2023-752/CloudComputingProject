@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
         const { spawn } = await import('child_process');
         const path = await import('path');
 
-        // Locate backend script (we are in frontend/src/app/api/... so go up to backend)
-        const scriptPath = path.join(process.cwd(), '..', 'backend', 'detectors', 'humanize_cli.py');
-        const pythonCmd = process.env.PYTHON_PATH || '/opt/homebrew/bin/python3';
+        // Locate script in frontend/detectors
+        const scriptPath = path.join(process.cwd(), 'detectors', 'humanize_cli.py');
+        const pythonCmd = process.env.PYTHON_PATH || 'python';
 
         const pythonProcess = spawn(pythonCmd, [scriptPath]);
 
