@@ -120,38 +120,84 @@ function expandContractions(text: string): string {
     return outWords.join(' ')
 }
 
+// 4. Common Synonyms
+// (Imported at top of file)
+
+// --- Helper Functions ---
+
+// ... (existing helper functions) ...
+
 function replaceSynonyms(sentence: string, intensity: number): string {
     const doc = nlp(sentence)
+    doc.compute('root') // Required for .root property in json output
 
-    // Iterate through terms and replace if they match our dictionary and POS conditions
-    // Using compromise to identify basic parts of speech
+    // 1. Handle Verbs (with conjugation)
+    doc.verbs().forEach((vb: any) => {
+        // Robust Root Extraction (Heuristic Fallback to avoid recursion crashes)
+        let root = vb.text().toLowerCase();
+        try {
+            // Simple stemming for common cases
+            if (root.endsWith('ed')) {
+                // utilized -> utilize
+                const try1 = root.slice(0, -1); // utilized -> utilize
+                const try2 = root.slice(0, -2); // walked -> walk
+                if (COMMON_SYNONYMS[try1]) root = try1;
+                else if (COMMON_SYNONYMS[try2]) root = try2;
+            } else if (root.endsWith('ing')) {
+                const try1 = root.slice(0, -3); // walking -> walk
+                const try2 = root.slice(0, -3) + 'e'; // using -> use
+                if (COMMON_SYNONYMS[try1]) root = try1;
+                else if (COMMON_SYNONYMS[try2]) root = try2;
+            } else if (root.endsWith('s')) {
+                const try1 = root.slice(0, -1);
+                if (COMMON_SYNONYMS[try1]) root = try1;
+            }
+        } catch (e) {
+            // Ignore errors
+        }
 
+        if (COMMON_SYNONYMS[root]) {
+            if (Math.random() < intensity) {
+                const options = COMMON_SYNONYMS[root]
+                const choice = options[Math.floor(Math.random() * options.length)]
+
+                // Detect Tense
+                const isPast = vb.has('#PastTense')
+                const isGerund = vb.has('#Gerund') // -ing
+
+                // Replace with base form first
+                vb.replace(choice)
+
+                // Re-apply Tense to the new verb
+                const newVb = doc.verbs().find((v: any) => v.text().includes(choice) || v.text().includes(choice.split(' ')[0]))
+
+                if (newVb) {
+                    if (isPast) newVb.toPastTense()
+                    if (isGerund) newVb.toGerund()
+                }
+            }
+        }
+    })
+
+    // 2. Handle Adjectives/Adverbs (Simple replacement)
+    // We can iterate terms checking for #Adjective or #Adverb
     doc.terms().forEach((term: any) => {
+        if (term.has('#Verb')) return; // Already handled
+
         const text = term.text()
+        const lower = text.toLowerCase()
+        const isTarget = term.has('#Adjective') || term.has('#Adverb')
 
-        // Skip placeholders
-        if (text.includes('[[REF_')) return
+        if (isTarget && COMMON_SYNONYMS[lower]) {
+            if (Math.random() < intensity) {
+                const options = COMMON_SYNONYMS[lower]
+                const choice = options[Math.floor(Math.random() * options.length)]
 
-        // Get POS tags from compromise
-        // Check if POS matches ADJ, NOUN, VERB, ADV logic
-        // Compromise tags: Adjective, Noun, Verb, Adverb
-        const isTargetPOS = term.has('#Adjective') || term.has('#Noun') || term.has('#Verb') || term.has('#Adverb')
-
-        if (isTargetPOS) {
-            const lower = text.toLowerCase()
-
-            // Check if we have synonyms for this word
-            if (COMMON_SYNONYMS[lower]) {
-                if (Math.random() < intensity) {
-                    const options = COMMON_SYNONYMS[lower]
-                    const choice = options[Math.floor(Math.random() * options.length)]
-
-                    // Maintain basic capitalization
-                    if (text[0] === text[0].toUpperCase()) {
-                        term.replace(choice.charAt(0).toUpperCase() + choice.slice(1))
-                    } else {
-                        term.replace(choice)
-                    }
+                // Capitalization check
+                if (text[0] === text[0].toUpperCase()) {
+                    term.replace(choice.charAt(0).toUpperCase() + choice.slice(1))
+                } else {
+                    term.replace(choice)
                 }
             }
         }
