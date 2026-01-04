@@ -5,19 +5,25 @@ import { detectAI } from '@/lib/detector'
 import { humanizeText } from '@/lib/humanize'
 
 export async function POST(request: NextRequest) {
+    console.log('[API] Rephrase request received');
     try {
         const session = await getSession()
+        console.log('[API] Session:', session ? 'Authenticated' : 'No session');
 
         if (!session) {
+            console.log('[API] Authentication failed');
             return NextResponse.json(
                 { success: false, error: 'Not authenticated' },
                 { status: 401 }
             )
         }
 
-        const { conversationId, content, tone } = await request.json()
+        const body = await request.json()
+        console.log('[API] Request body keys:', Object.keys(body));
+        const { conversationId, content, tone } = body;
 
         if (!content || !content.trim()) {
+            console.log('[API] Missing content');
             return NextResponse.json(
                 { success: false, error: 'Content is required' },
                 { status: 400 }
@@ -29,8 +35,7 @@ export async function POST(request: NextRequest) {
             where: { id: session.userId },
             select: { educationLevel: true, userType: true },
         })
-
-        const userContext = `${user?.userType || 'user'} at ${user?.educationLevel || 'general'} level`
+        console.log('[API] User found:', user?.userType);
 
         // Verify conversation belongs to user
         const conversation = await prisma.conversation.findFirst({
@@ -41,27 +46,54 @@ export async function POST(request: NextRequest) {
         })
 
         if (!conversation) {
+            console.log('[API] Conversation not found or access denied. ID:', conversationId);
             return NextResponse.json(
                 { success: false, error: 'Conversation not found' },
                 { status: 404 }
             )
         }
-
-        // 1. Rule-based Humanization (Paraphrasing)
-        // Uses the settings from conversation or defaults
+        console.log('[API] Conversation params:', {
+            synonymIntensity: conversation.synonymIntensity,
+            transitionFrequency: conversation.transitionFrequency
+        });
 
         // 1. Rule-based Humanization (TypeScript Implementation)
-        // Uses the settings from conversation or defaults
-        // Now runs fully in Node.js, compatible with Digital Ocean App Platform
+        console.log('[API] Starting humanization...');
+        const startTime = Date.now();
 
-        const humanizedText = humanizeText(
+        // Guarantee at least some change if possible
+        let currentIntensity = conversation.synonymIntensity || 0.4;
+        const currentFrequency = conversation.transitionFrequency || 0.3;
+
+        console.log(`[API] Initial Intensity: ${currentIntensity}, Frequency: ${currentFrequency}`);
+
+        let humanizedText = humanizeText(
             content,
-            conversation.synonymIntensity,
-            conversation.transitionFrequency
+            currentIntensity,
+            currentFrequency
         )
 
+        // Retry with higher intensity if no changes were made
+        let attempts = 0;
+        while (humanizedText === content && attempts < 2 && currentIntensity < 1.0) {
+            attempts++;
+            currentIntensity = Math.min(1.0, currentIntensity + 0.3);
+            console.log(`[API] No changes detected. Retrying with intensity: ${currentIntensity}`);
+
+            humanizedText = humanizeText(
+                content,
+                currentIntensity, // Boosted intensity
+                currentFrequency
+            )
+        }
+
+        console.log('[API] Humanization complete. Time:', Date.now() - startTime, 'ms');
+        console.log('[API] Original length:', content.length, 'New length:', humanizedText.length);
+
         // 2. Local Analysis (Check)
+        console.log('[API] Running AI detection on result...');
         const analysis = await detectAI(humanizedText)
+        console.log('[API] AI Detection complete. Score:', analysis.aiContentPercentage);
 
         // Save rephrased message
         const rephrasedMessage = await prisma.message.create({
@@ -73,6 +105,7 @@ export async function POST(request: NextRequest) {
                 charCount: humanizedText.length,
             },
         })
+        console.log('[API] Message saved:', rephrasedMessage.id);
 
         // Update conversation timestamp
         await prisma.conversation.update({
@@ -89,7 +122,7 @@ export async function POST(request: NextRequest) {
             },
         })
     } catch (error) {
-        console.error('Rephrase error:', error)
+        console.error('[API] Rephrase CRITICAL ERROR:', error)
         return NextResponse.json(
             { success: false, error: 'Rephrasing failed. Please try again.' },
             { status: 500 }

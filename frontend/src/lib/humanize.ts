@@ -129,7 +129,7 @@ function expandContractions(text: string): string {
 
 function replaceSynonyms(sentence: string, intensity: number): string {
     const doc = nlp(sentence)
-    doc.compute('root') // Required for .root property in json output
+    // doc.compute('root') removed
 
     // 1. Handle Verbs (with conjugation)
     doc.verbs().forEach((vb: any) => {
