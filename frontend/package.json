@@ -25,15 +25,18 @@
     "next-auth": "^4.24.13",
     "pg": "^8.16.3",
     "prisma": "^6.19.1",
+    "python-shell": "^5.0.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "recharts": "^3.5.1"
+    "recharts": "^3.5.1",
+    "wordnet-db": "^3.1.14"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
+    "@types/python-shell": "^0.4.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

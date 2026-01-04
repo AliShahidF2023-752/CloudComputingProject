@@ -1,6 +1,14 @@
+/**
+ * TypeScript port of Python humanize_text.py
+ * Uses an expanded static synonym dictionary for compatibility with serverless environments
+ * Uses compromise for NLP/POS tagging (matching spaCy behavior)
+ */
+
 import nlp from 'compromise'
 
-// 1. Contraction Maps
+// ========================================
+// 1. Contraction Maps (exact match with Python)
+// ========================================
 const WHOLE_CONTRACTIONS: Record<string, string> = {
     "can't": "cannot",
     "won't": "will not",
@@ -42,7 +50,9 @@ const SUFFIX_CONTRACTIONS: Record<string, string> = {
     "'m": " am"
 }
 
-// 2. Academic Transitions
+// ========================================
+// 2. Academic Transitions (exact match with Python)
+// ========================================
 const ACADEMIC_TRANSITIONS = [
     "Moreover,",
     "Additionally,",
@@ -58,16 +68,211 @@ const ACADEMIC_TRANSITIONS = [
     "As a result,",
 ]
 
-// 3. Regex Patterns
+// ========================================
+// 3. Regex Patterns (exact match with Python)
+// ========================================
 const CITATION_REGEX = /\(\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,\s*\d{4}(?:,\s*(?:pp?\.\s*\d+(?:-\d+)?))?\s*\)/g
 const PLACEHOLDER_REGEX = /\[\s*\[\s*REF_(\d+)\s*\]\s*\]/g
 
-// 4. Common Synonyms
-import { COMMON_SYNONYMS } from './synonyms';
+// ========================================
+// 4. Expanded Synonym Dictionary (matching WordNet coverage)
+// Organized by POS for accurate replacement
+// ========================================
+const SYNONYMS: Record<string, string[]> = {
+    // === VERBS ===
+    "utilize": ["use", "employ", "apply", "leverage", "harness", "exploit"],
+    "demonstrate": ["show", "prove", "reveal", "display", "exhibit", "illustrate", "manifest"],
+    "facilitate": ["help", "ease", "enable", "promote", "further", "assist", "aid"],
+    "implement": ["execute", "carry out", "enact", "perform", "realize", "accomplish"],
+    "assist": ["help", "aid", "support", "serve", "back", "abet"],
+    "attempt": ["try", "strive", "endeavor", "seek", "aim", "undertake"],
+    "challenge": ["test", "question", "dispute", "confront", "contest", "defy"],
+    "ensure": ["make sure", "guarantee", "secure", "assure", "confirm", "verify"],
+    "obtain": ["get", "acquire", "gain", "attain", "procure", "secure"],
+    "provide": ["give", "supply", "furnish", "offer", "present", "deliver"],
+    "require": ["need", "entail", "demand", "necessitate", "call for"],
+    "select": ["choose", "pick", "opt for", "decide on", "elect"],
+    "terminate": ["end", "stop", "cease", "conclude", "finish", "halt"],
+    "indicate": ["show", "point out", "signify", "denote", "suggest", "imply"],
+    "illustrate": ["show", "demonstrate", "exemplify", "depict", "portray"],
+    "suggest": ["propose", "recommend", "advise", "imply", "hint", "indicate"],
+    "establish": ["set up", "found", "institute", "create", "form", "build"],
+    "identify": ["spot", "recognize", "pinpoint", "detect", "discern", "discover"],
+    "examine": ["check", "inspect", "study", "analyze", "review", "scrutinize"],
+    "investigate": ["explore", "examine", "study", "research", "probe", "inquire"],
+    "determine": ["decide", "figure out", "conclude", "resolve", "ascertain"],
+    "develop": ["grow", "evolve", "advance", "expand", "progress", "mature"],
+    "enhance": ["improve", "boost", "heighten", "increase", "strengthen", "augment"],
+    "maintain": ["keep", "preserve", "sustain", "continue", "uphold", "retain"],
+    "occur": ["happen", "take place", "arise", "transpire", "emerge", "appear"],
+    "participate": ["take part", "join", "engage", "partake", "contribute"],
+    "possess": ["have", "own", "hold", "retain", "keep"],
+    "prevent": ["stop", "hinder", "avert", "block", "impede", "thwart"],
+    "purchase": ["buy", "acquire", "get", "obtain", "procure"],
+    "receive": ["get", "obtain", "accept", "acquire", "gain"],
+    "respond": ["reply", "answer", "react", "retort", "counter"],
+    "achieve": ["accomplish", "attain", "reach", "realize", "complete"],
+    "analyze": ["examine", "study", "investigate", "assess", "evaluate"],
+    "assume": ["presume", "suppose", "believe", "think", "expect"],
+    "conduct": ["perform", "carry out", "execute", "do", "undertake"],
+    "consider": ["think about", "contemplate", "ponder", "reflect on", "weigh"],
+    "create": ["make", "produce", "generate", "form", "develop", "design"],
+    "define": ["describe", "explain", "characterize", "specify", "clarify"],
+    "describe": ["explain", "depict", "portray", "illustrate", "outline"],
+    "discuss": ["talk about", "debate", "consider", "examine", "explore"],
+    "evaluate": ["assess", "judge", "appraise", "rate", "review"],
+    "explain": ["describe", "clarify", "elucidate", "expound", "interpret"],
+    "include": ["contain", "comprise", "incorporate", "encompass", "cover"],
+    "increase": ["raise", "boost", "enhance", "elevate", "amplify", "grow"],
+    "present": ["show", "display", "introduce", "offer", "submit"],
+    "produce": ["create", "make", "generate", "manufacture", "yield"],
+    "reduce": ["decrease", "lower", "diminish", "lessen", "cut"],
+    "represent": ["depict", "portray", "symbolize", "stand for", "embody"],
+    "support": ["back", "help", "assist", "aid", "uphold", "endorse"],
+    "understand": ["comprehend", "grasp", "appreciate", "perceive", "realize"],
 
+    // === ADJECTIVES ===
+    "significant": ["important", "major", "notable", "considerable", "substantial"],
+    "various": ["many", "several", "diverse", "different", "numerous"],
+    "sufficient": ["enough", "adequate", "plenty", "ample"],
+    "numerous": ["many", "lots of", "countless", "multiple", "several"],
+    "fundamental": ["basic", "core", "essential", "key", "primary"],
+    "essential": ["crucial", "vital", "key", "important", "necessary"],
+    "critical": ["key", "vital", "crucial", "major", "important"],
+    "beneficial": ["helpful", "good", "useful", "advantageous", "valuable"],
+    "detrimental": ["harmful", "bad", "damaging", "injurious", "hurtful"],
+    "effective": ["good", "useful", "successful", "efficient", "productive"],
+    "efficient": ["quick", "fast", "productive", "effective", "capable"],
+    "novel": ["new", "fresh", "original", "unique", "innovative"],
+    "appropriate": ["fitting", "suitable", "right", "proper", "apt"],
+    "incorrect": ["wrong", "false", "inaccurate", "erroneous", "mistaken"],
+    "difficult": ["hard", "tough", "challenging", "demanding", "arduous"],
+    "simple": ["easy", "plain", "uncomplicated", "basic", "straightforward"],
+    "complex": ["complicated", "intricate", "elaborate", "sophisticated"],
+    "important": ["significant", "crucial", "vital", "essential", "key"],
+    "large": ["big", "huge", "vast", "enormous", "substantial"],
+    "small": ["little", "tiny", "minor", "slight", "modest"],
+    "good": ["excellent", "fine", "great", "positive", "favorable"],
+    "bad": ["poor", "negative", "unfavorable", "adverse", "harmful"],
+    "new": ["novel", "fresh", "recent", "modern", "original"],
+    "old": ["ancient", "former", "previous", "outdated", "aged"],
+    "high": ["elevated", "tall", "lofty", "great", "substantial"],
+    "low": ["reduced", "minimal", "modest", "slight", "limited"],
+    "main": ["primary", "chief", "principal", "major", "key"],
+    "specific": ["particular", "precise", "exact", "definite", "explicit"],
+    "general": ["broad", "overall", "common", "widespread", "universal"],
+    "common": ["frequent", "usual", "typical", "widespread", "prevalent"],
+    "different": ["distinct", "varied", "diverse", "dissimilar", "alternative"],
+    "similar": ["alike", "comparable", "analogous", "related", "akin"],
+    "strong": ["powerful", "robust", "solid", "firm", "intense"],
+    "weak": ["feeble", "fragile", "frail", "poor", "inadequate"],
+    "clear": ["obvious", "evident", "apparent", "plain", "distinct"],
+    "certain": ["sure", "definite", "particular", "specific", "confident"],
+    "possible": ["potential", "feasible", "viable", "likely", "probable"],
+    "necessary": ["essential", "required", "needed", "vital", "mandatory"],
+    "available": ["accessible", "obtainable", "ready", "at hand"],
+    "current": ["present", "existing", "ongoing", "contemporary", "modern"],
+    "previous": ["prior", "former", "earlier", "past", "preceding"],
+    "following": ["subsequent", "next", "ensuing", "succeeding"],
+    "additional": ["extra", "further", "more", "supplementary", "added"],
+    "particular": ["specific", "certain", "special", "individual", "distinct"],
+    "successful": ["effective", "productive", "fruitful", "triumphant"],
+    "relevant": ["pertinent", "applicable", "related", "appropriate", "germane"],
 
-// --- Helper Functions ---
+    // === ADVERBS ===
+    "additionally": ["also", "too", "besides", "moreover", "furthermore"],
+    "moreover": ["also", "plus", "furthermore", "what is more", "besides"],
+    "however": ["but", "yet", "still", "though", "nevertheless"],
+    "therefore": ["so", "thus", "hence", "accordingly", "consequently"],
+    "approximately": ["about", "around", "roughly", "nearly", "almost"],
+    "currently": ["now", "at present", "right now", "presently", "today"],
+    "frequently": ["often", "regularly", "commonly", "repeatedly"],
+    "immediately": ["at once", "right away", "instantly", "promptly"],
+    "initially": ["at first", "to start with", "originally", "first"],
+    "primarily": ["mainly", "mostly", "chiefly", "principally", "largely"],
+    "significantly": ["notably", "considerably", "substantially", "markedly"],
+    "subsequently": ["later", "afterwards", "then", "following this", "next"],
+    "particularly": ["especially", "specifically", "notably", "specifically"],
+    "generally": ["usually", "typically", "commonly", "normally", "broadly"],
+    "specifically": ["particularly", "especially", "precisely", "exactly"],
+    "relatively": ["comparatively", "fairly", "somewhat", "rather"],
+    "extremely": ["very", "highly", "exceptionally", "incredibly", "remarkably"],
+    "completely": ["entirely", "fully", "totally", "wholly", "absolutely"],
+    "essentially": ["basically", "fundamentally", "primarily", "mainly"],
+    "obviously": ["clearly", "evidently", "apparently", "plainly"],
+    "certainly": ["definitely", "surely", "undoubtedly", "absolutely"],
+    "possibly": ["perhaps", "maybe", "potentially", "conceivably"],
+    "likely": ["probably", "presumably", "apparently", "seemingly"],
+    "actually": ["really", "in fact", "truly", "indeed", "genuinely"],
+    "simply": ["just", "merely", "only", "purely", "easily"],
+    "clearly": ["obviously", "evidently", "plainly", "distinctly"],
+    "directly": ["straight", "immediately", "expressly", "personally"],
+    "effectively": ["efficiently", "successfully", "productively"],
+    "rapidly": ["quickly", "fast", "swiftly", "speedily", "hastily"],
+    "slowly": ["gradually", "steadily", "leisurely", "unhurriedly"],
 
+    // === NOUNS ===
+    "concept": ["idea", "notion", "theory", "conception", "thought"],
+    "conclusion": ["end", "closing", "finale", "resolution", "verdict"],
+    "analysis": ["examination", "study", "review", "assessment", "evaluation"],
+    "approach": ["method", "way", "technique", "strategy", "system"],
+    "area": ["field", "domain", "sector", "region", "zone"],
+    "aspect": ["element", "feature", "factor", "facet", "dimension"],
+    "basis": ["foundation", "base", "ground", "core", "root"],
+    "benefit": ["advantage", "gain", "profit", "merit", "asset"],
+    "category": ["class", "group", "type", "kind", "division"],
+    "component": ["part", "element", "piece", "constituent", "segment"],
+    "consequence": ["result", "outcome", "effect", "aftermath", "repercussion"],
+    "context": ["setting", "background", "environment", "situation", "framework"],
+    "data": ["information", "facts", "figures", "statistics", "details"],
+    "definition": ["meaning", "description", "explanation", "interpretation"],
+    "element": ["component", "part", "factor", "feature", "aspect"],
+    "environment": ["setting", "surroundings", "context", "atmosphere", "milieu"],
+    "evidence": ["proof", "testimony", "indication", "sign", "demonstration"],
+    "example": ["instance", "sample", "case", "illustration", "specimen"],
+    "factor": ["element", "component", "aspect", "consideration", "influence"],
+    "feature": ["characteristic", "attribute", "quality", "trait", "aspect"],
+    "function": ["role", "purpose", "task", "job", "duty"],
+    "hypothesis": ["theory", "assumption", "proposition", "conjecture", "thesis"],
+    "impact": ["effect", "influence", "consequence", "result", "outcome"],
+    "individual": ["person", "human", "being", "entity", "character"],
+    "instance": ["example", "case", "occurrence", "situation", "event"],
+    "issue": ["problem", "matter", "question", "concern", "topic"],
+    "method": ["approach", "way", "technique", "procedure", "process"],
+    "objective": ["goal", "aim", "target", "purpose", "end"],
+    "outcome": ["result", "consequence", "effect", "end", "conclusion"],
+    "period": ["time", "era", "age", "phase", "stage"],
+    "perspective": ["viewpoint", "view", "standpoint", "angle", "outlook"],
+    "phenomenon": ["occurrence", "event", "happening", "fact", "circumstance"],
+    "principle": ["rule", "law", "standard", "guideline", "tenet"],
+    "problem": ["issue", "difficulty", "challenge", "obstacle", "trouble"],
+    "process": ["procedure", "method", "operation", "system", "mechanism"],
+    "purpose": ["aim", "goal", "objective", "intention", "reason"],
+    "reason": ["cause", "motive", "basis", "ground", "rationale"],
+    "research": ["study", "investigation", "inquiry", "examination", "analysis"],
+    "resource": ["asset", "material", "supply", "source", "means"],
+    "response": ["reply", "answer", "reaction", "feedback", "retort"],
+    "result": ["outcome", "consequence", "effect", "conclusion", "product"],
+    "role": ["function", "part", "position", "job", "duty"],
+    "section": ["part", "portion", "segment", "division", "chapter"],
+    "significance": ["importance", "meaning", "relevance", "weight", "value"],
+    "situation": ["circumstance", "condition", "state", "position", "context"],
+    "source": ["origin", "root", "cause", "basis", "beginning"],
+    "strategy": ["plan", "approach", "method", "tactic", "scheme"],
+    "structure": ["framework", "organization", "arrangement", "system", "form"],
+    "study": ["research", "investigation", "examination", "analysis", "survey"],
+    "system": ["structure", "organization", "arrangement", "framework", "network"],
+    "task": ["job", "duty", "assignment", "work", "chore"],
+    "theory": ["hypothesis", "concept", "idea", "principle", "model"],
+    "topic": ["subject", "theme", "issue", "matter", "question"],
+    "type": ["kind", "sort", "category", "class", "variety"],
+    "value": ["worth", "merit", "importance", "significance", "benefit"],
+    "variable": ["factor", "element", "parameter", "component"],
+}
+
+// ========================================
+// Helper: Citation Protection (exact port)
+// ========================================
 function extractCitations(text: string): { text: string; map: Record<string, string> } {
     const refs = text.match(CITATION_REGEX) || []
     const placeholderMap: Record<string, string> = {}
@@ -89,112 +294,121 @@ function restoreCitations(text: string, map: Record<string, string>): string {
     })
 }
 
-function expandContractions(text: string): string {
-    // 1. Whole word replacements
-    let newText = text.replace(/[\w']+/g, (word) => {
-        const lower = word.toLowerCase()
-        if (WHOLE_CONTRACTIONS[lower]) {
-            const expansion = WHOLE_CONTRACTIONS[lower]
-            // Maintain capitalization
-            if (word[0] === word[0].toUpperCase()) {
-                return expansion.charAt(0).toUpperCase() + expansion.slice(1)
-            }
-            return expansion
+// ========================================
+// Helper: Expand Contractions (exact port)
+// ========================================
+function expandContractions(sentence: string): string {
+    // Build regex alternation for whole contractions
+    const alt = Object.keys(WHOLE_CONTRACTIONS).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+    const wholePattern = new RegExp(`(?:(\`\`)\\s*)?(?<word>(?:${alt}))(?:\\s*(''))?`, 'gi')
+
+    // 1) Apply whole-word contractions
+    let newSentence = sentence.replace(wholePattern, (match, openTok, word, closeTok) => {
+        const open = openTok || ''
+        const close = closeTok || ''
+        const key = word.toLowerCase()
+        let repl = WHOLE_CONTRACTIONS[key] || word
+        if (word && word[0] === word[0].toUpperCase()) {
+            repl = repl.charAt(0).toUpperCase() + repl.slice(1)
         }
-        return word
+        return `${open}${repl}${close}`
     })
 
-    // 2. Suffix replacements
-    const words = newText.split(' ')
-    const outWords = words.map(w => {
-        const lower = w.toLowerCase()
-        for (const [suffix, expansion] of Object.entries(SUFFIX_CONTRACTIONS)) {
-            if (lower.endsWith(suffix) && lower !== suffix) {
-                const base = w.slice(0, -suffix.length)
-                return base + expansion
+    // 2) Handle suffix-based contractions as fallback
+    const words = newSentence.split(/\s+/)
+    const outWords = words.map(t => {
+        const lowerT = t.toLowerCase()
+        for (const [contr, expansion] of Object.entries(SUFFIX_CONTRACTIONS)) {
+            if (lowerT.endsWith(contr) && lowerT !== contr) {
+                const base = t.slice(0, -contr.length)
+                let newT = base + expansion
+                if (t && t[0] === t[0].toUpperCase()) {
+                    newT = newT.charAt(0).toUpperCase() + newT.slice(1)
+                }
+                return newT
             }
         }
-        return w
+        return t
     })
 
     return outWords.join(' ')
 }
 
-// 4. Common Synonyms
-// (Imported at top of file)
+// ========================================
+// Helper: Get Synonyms (using expanded dictionary)
+// ========================================
+function getSynonyms(word: string): string[] {
+    const lower = word.toLowerCase()
 
-// --- Helper Functions ---
+    // Direct lookup
+    if (SYNONYMS[lower]) {
+        return SYNONYMS[lower]
+    }
 
-// ... (existing helper functions) ...
+    // Try stemming for conjugated forms
+    // Handle -ed endings (utilized -> utilize)
+    if (lower.endsWith('ed')) {
+        const try1 = lower.slice(0, -1) // utilized -> utilize
+        const try2 = lower.slice(0, -2) // walked -> walk
+        const try3 = lower.slice(0, -3) // studied -> study (approximation)
+        if (SYNONYMS[try1]) return SYNONYMS[try1]
+        if (SYNONYMS[try2]) return SYNONYMS[try2]
+        if (SYNONYMS[try3]) return SYNONYMS[try3]
+    }
 
-function replaceSynonyms(sentence: string, intensity: number): string {
+    // Handle -ing endings
+    if (lower.endsWith('ing')) {
+        const try1 = lower.slice(0, -3) // walking -> walk
+        const try2 = lower.slice(0, -3) + 'e' // using -> use
+        if (SYNONYMS[try1]) return SYNONYMS[try1]
+        if (SYNONYMS[try2]) return SYNONYMS[try2]
+    }
+
+    // Handle -s endings (plural/third person)
+    if (lower.endsWith('s')) {
+        const try1 = lower.slice(0, -1)
+        if (SYNONYMS[try1]) return SYNONYMS[try1]
+    }
+
+    // Handle -ly adverbs
+    if (lower.endsWith('ly')) {
+        const try1 = lower.slice(0, -2) // quickly -> quick
+        if (SYNONYMS[try1]) return SYNONYMS[try1]
+    }
+
+    return []
+}
+
+// ========================================
+// Helper: Replace Synonyms (matching Python logic)
+// ========================================
+function replaceSynonyms(sentence: string, pSyn: number): string {
+    // Skip if sentence contains citation placeholder
+    if (sentence.includes('[[REF_')) {
+        return sentence
+    }
+
     const doc = nlp(sentence)
-    // doc.compute('root') removed
 
-    // 1. Handle Verbs (with conjugation)
-    doc.verbs().forEach((vb: any) => {
-        // Robust Root Extraction (Heuristic Fallback to avoid recursion crashes)
-        let root = vb.text().toLowerCase();
-        try {
-            // Simple stemming for common cases
-            if (root.endsWith('ed')) {
-                // utilized -> utilize
-                const try1 = root.slice(0, -1); // utilized -> utilize
-                const try2 = root.slice(0, -2); // walked -> walk
-                if (COMMON_SYNONYMS[try1]) root = try1;
-                else if (COMMON_SYNONYMS[try2]) root = try2;
-            } else if (root.endsWith('ing')) {
-                const try1 = root.slice(0, -3); // walking -> walk
-                const try2 = root.slice(0, -3) + 'e'; // using -> use
-                if (COMMON_SYNONYMS[try1]) root = try1;
-                else if (COMMON_SYNONYMS[try2]) root = try2;
-            } else if (root.endsWith('s')) {
-                const try1 = root.slice(0, -1);
-                if (COMMON_SYNONYMS[try1]) root = try1;
-            }
-        } catch (e) {
-            // Ignore errors
-        }
-
-        if (COMMON_SYNONYMS[root]) {
-            if (Math.random() < intensity) {
-                const options = COMMON_SYNONYMS[root]
-                const choice = options[Math.floor(Math.random() * options.length)]
-
-                // Detect Tense
-                const isPast = vb.has('#PastTense')
-                const isGerund = vb.has('#Gerund') // -ing
-
-                // Replace with base form first
-                vb.replace(choice)
-
-                // Re-apply Tense to the new verb
-                const newVb = doc.verbs().find((v: any) => v.text().includes(choice) || v.text().includes(choice.split(' ')[0]))
-
-                if (newVb) {
-                    const anyVb = newVb as any;
-                    if (isPast) anyVb.toPastTense()
-                    if (isGerund) anyVb.toGerund()
-                }
-            }
-        }
-    })
-
-    // 2. Handle Adjectives/Adverbs (Simple replacement)
-    // We can iterate terms checking for #Adjective or #Adverb
+    // Process all terms
     doc.terms().forEach((term: any) => {
-        if (term.has('#Verb')) return; // Already handled
-
         const text = term.text()
-        const lower = text.toLowerCase()
-        const isTarget = term.has('#Adjective') || term.has('#Adverb')
 
-        if (isTarget && COMMON_SYNONYMS[lower]) {
-            if (Math.random() < intensity) {
-                const options = COMMON_SYNONYMS[lower]
-                const choice = options[Math.floor(Math.random() * options.length)]
+        // Skip citation placeholders
+        if (text.includes('[[REF_')) return
 
-                // Capitalization check
+        // Check POS - target ADJ, NOUN, VERB, ADV (matching Python)
+        const isAdjective = term.has('#Adjective')
+        const isNoun = term.has('#Noun')
+        const isVerb = term.has('#Verb')
+        const isAdverb = term.has('#Adverb')
+
+        if ((isAdjective || isNoun || isVerb || isAdverb) && Math.random() < pSyn) {
+            const synonyms = getSynonyms(text)
+
+            if (synonyms.length > 0) {
+                const choice = synonyms[Math.floor(Math.random() * synonyms.length)]
+                // Preserve capitalization
                 if (text[0] === text[0].toUpperCase()) {
                     term.replace(choice.charAt(0).toUpperCase() + choice.slice(1))
                 } else {
@@ -207,22 +421,26 @@ function replaceSynonyms(sentence: string, intensity: number): string {
     return doc.text()
 }
 
-function addAcademicTransition(sentence: string, frequency: number): string {
-    // Check if sentence already starts with any academic transition
-    const startsWithTransition = ACADEMIC_TRANSITIONS.some(t => sentence.trim().startsWith(t.replace(',', '')));
-    if (startsWithTransition) return sentence;
+// ========================================
+// Helper: Add Academic Transition (exact port)
+// ========================================
+function addAcademicTransition(sentence: string, pTransition: number): string {
+    // Check if already starts with a transition
+    const startsWithTransition = ACADEMIC_TRANSITIONS.some(t =>
+        sentence.trim().toLowerCase().startsWith(t.toLowerCase().replace(',', ''))
+    )
+    if (startsWithTransition) return sentence
 
-    if (Math.random() < frequency) {
+    if (Math.random() < pTransition) {
         const transition = ACADEMIC_TRANSITIONS[Math.floor(Math.random() * ACADEMIC_TRANSITIONS.length)]
-        // Double check specific transition presence just in case
-        if (!sentence.includes(transition)) {
-            return `${transition} ${sentence}`
-        }
+        return `${transition} ${sentence}`
     }
     return sentence
 }
 
-// Port of "minimal_humanize_line"
+// ========================================
+// Core: Minimal Humanize Line (exact port)
+// ========================================
 function minimalHumanizeLine(line: string, pSyn: number, pTrans: number): string {
     let processed = expandContractions(line)
     processed = replaceSynonyms(processed, pSyn)
@@ -230,9 +448,10 @@ function minimalHumanizeLine(line: string, pSyn: number, pTrans: number): string
     return processed
 }
 
-// Port of "minimal_rewriting"
+// ========================================
+// Core: Minimal Rewriting (exact port)
+// ========================================
 function minimalRewriting(text: string, pSyn: number, pTrans: number): string {
-    // Process sentence by sentence
     const doc = nlp(text)
     const sentences = doc.sentences().json()
 
@@ -243,12 +462,14 @@ function minimalRewriting(text: string, pSyn: number, pTrans: number): string {
     return outSentences.join(' ')
 }
 
-// Port of "preserve_linebreaks_rewrite"
+// ========================================
+// Core: Preserve Linebreaks Rewrite (exact port)
+// ========================================
 function preserveLinebreaksRewrite(text: string, pSyn: number, pTrans: number): string {
     const lines = text.split('\n')
     const outLines = lines.map(ln => {
         if (!ln.trim()) {
-            return ""
+            return ''
         } else {
             return minimalRewriting(ln, pSyn, pTrans)
         }
@@ -256,13 +477,15 @@ function preserveLinebreaksRewrite(text: string, pSyn: number, pTrans: number): 
     return outLines.join('\n')
 }
 
-// Main Export
-export function humanizeText(
+// ========================================
+// Main Export: humanizeText
+// ========================================
+export async function humanizeText(
     text: string,
     synonymIntensity: number = 0.2,
     transitionFrequency: number = 0.2
-): string {
-    // 1. Extract & Protect Citations (Global Step, as per script logic flow)
+): Promise<string> {
+    // 1. Extract & Protect Citations
     const { text: noRefsText, map } = extractCitations(text)
 
     // 2. Line-by-Line / Sentence-by-Sentence Rewrite
@@ -271,13 +494,30 @@ export function humanizeText(
     // 3. Restore Citations
     let finalText = restoreCitations(processed, map)
 
-    // 4. Final Cleanup (spacing)
-    // The script script normalized spaces around punctuation after everything
-    finalText = finalText.replace(/\s+([.,;:!?])/g, '$1')
-        .replace(/(\()\s+/g, '$1')
-        .replace(/\s+(\))/g, '$1')
-        .replace(/\s{2,}/g, ' ')
-        // Normalize paired quotes logic roughly
+    // 4. Final Cleanup (spacing) - exact match with Python
+    finalText = finalText.replace(/[ \t]+([.,;:!?])/g, '$1')
+        .replace(/\(\s+/g, '(')
+        .replace(/\s+\)/g, ')')
+        .replace(/[ \t]{2,}/g, ' ')
+        .replace(/``\s*(.+?)\s*''/g, '"$1"')
+
+    return finalText
+}
+
+// Sync version for backwards compatibility
+export function humanizeTextSync(
+    text: string,
+    synonymIntensity: number = 0.2,
+    transitionFrequency: number = 0.2
+): string {
+    const { text: noRefsText, map } = extractCitations(text)
+    let processed = preserveLinebreaksRewrite(noRefsText, synonymIntensity, transitionFrequency)
+    let finalText = restoreCitations(processed, map)
+
+    finalText = finalText.replace(/[ \t]+([.,;:!?])/g, '$1')
+        .replace(/\(\s+/g, '(')
+        .replace(/\s+\)/g, ')')
+        .replace(/[ \t]{2,}/g, ' ')
         .replace(/``\s*(.+?)\s*''/g, '"$1"')
 
     return finalText

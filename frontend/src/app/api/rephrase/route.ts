@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { detectAI } from '@/lib/detector'
-import { humanizeText } from '@/lib/humanize'
+import { PythonShell } from 'python-shell'
+import path from 'path'
 
 export async function POST(request: NextRequest) {
     console.log('[API] Rephrase request received');
@@ -57,9 +58,52 @@ export async function POST(request: NextRequest) {
             transitionFrequency: conversation.transitionFrequency
         });
 
-        // 1. Rule-based Humanization (TypeScript Implementation)
-        console.log('[API] Starting humanization...');
+        // 1. Python-based Humanization
+        console.log('[API] Starting humanization via Python script...');
         const startTime = Date.now();
+
+        // Helper to run Python script
+        const runHumanizer = async (text: string, pSyn: number, pTrans: number): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                const options = {
+                    mode: 'text' as const,
+                    scriptPath: path.join(process.cwd(), 'detectors'),
+                };
+
+                const pyshell = new PythonShell('humanize_cli.py', options);
+
+                const payload = {
+                    text: text,
+                    p_syn: pSyn,
+                    p_trans: pTrans,
+                    preserve_linebreaks: true
+                };
+
+                // Buffer to collect output
+                let outputData = '';
+
+                pyshell.send(JSON.stringify(payload));
+
+                pyshell.on('message', (message) => {
+                    outputData += message;
+                });
+
+                pyshell.end((err, code, signal) => {
+                    if (err) return reject(err);
+                    try {
+                        const result = JSON.parse(outputData);
+                        if (result.error) {
+                            reject(new Error(result.error));
+                        } else {
+                            resolve(result.humanized_text);
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse Python output:', outputData);
+                        reject(e);
+                    }
+                });
+            });
+        };
 
         // Guarantee at least some change if possible
         let currentIntensity = conversation.synonymIntensity || 0.4;
@@ -67,11 +111,7 @@ export async function POST(request: NextRequest) {
 
         console.log(`[API] Initial Intensity: ${currentIntensity}, Frequency: ${currentFrequency}`);
 
-        let humanizedText = humanizeText(
-            content,
-            currentIntensity,
-            currentFrequency
-        )
+        let humanizedText = await runHumanizer(content, currentIntensity, currentFrequency);
 
         // Retry with higher intensity if no changes were made
         let attempts = 0;
@@ -80,11 +120,7 @@ export async function POST(request: NextRequest) {
             currentIntensity = Math.min(1.0, currentIntensity + 0.3);
             console.log(`[API] No changes detected. Retrying with intensity: ${currentIntensity}`);
 
-            humanizedText = humanizeText(
-                content,
-                currentIntensity, // Boosted intensity
-                currentFrequency
-            )
+            humanizedText = await runHumanizer(content, currentIntensity, currentFrequency);
         }
 
         console.log('[API] Humanization complete. Time:', Date.now() - startTime, 'ms');
@@ -117,7 +153,7 @@ export async function POST(request: NextRequest) {
             success: true,
             data: {
                 message: rephrasedMessage,
-                iterations: 1, // Single pass with new logic
+                iterations: attempts + 1,
                 analysis: analysis,
             },
         })
