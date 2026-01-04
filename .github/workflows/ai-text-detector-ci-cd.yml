@@ -37,7 +37,7 @@ jobs:
 
       - name: Run pylint
         working-directory: model
-        run: find . -name '*.py' -exec pylint {} + --errors-only --fail-under=0 || true
+        run: find . -name '*.py' -exec pylint --errors-only --fail-under=0 {} + || true
 
   build-and-push:
     runs-on: ubuntu-latest
