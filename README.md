@@ -2,15 +2,13 @@
 
 <div align="center">
 
-![License](https://img.shields.io/badge/license-MIT-blue. svg)
-![Next.js](https://img.shields.io/badge/Next.js-16. 0-black)
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
 ![DigitalOcean](https://img.shields.io/badge/Deployed%20on-DigitalOcean-0080FF)
 
 **A cloud-native application for detecting plagiarism and AI-generated content with smart content remediation capabilities.**
 
-[🚀 Live Demo](https://squid-app-oaccw.ondigitalocean. app/) · [📖 Documentation](#-features) · [🐛 Report Bug](https://github.com/AliShahidF2023-752/CloudComputingProject/issues)
+[🚀 Live Demo](https://squid-app-oaccw.ondigitalocean.app/) · [📖 Documentation](#-features) · [🐛 Report Bug](https://github.com/AliShahidF2023-752/CloudComputingProject/issues)
 
 </div>
 
