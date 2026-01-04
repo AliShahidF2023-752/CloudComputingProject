@@ -50,105 +50,15 @@ export async function POST(request: NextRequest) {
         // 1. Rule-based Humanization (Paraphrasing)
         // Uses the settings from conversation or defaults
 
-        // 1. Rule-based Humanization via Local Python Script
-        // We spawn a python process to run detectors/humanize_cli.py
-        const { spawn } = await import('child_process');
-        const path = await import('path');
+        // 1. Rule-based Humanization (TypeScript Implementation)
+        // Uses the settings from conversation or defaults
+        // Now runs fully in Node.js, compatible with Digital Ocean App Platform
 
-        // Since we moved detectors to 'frontend/detectors'
-        // process.cwd() in Next.js points to the root of the project (frontend dir)
-        const scriptPath = path.join(process.cwd(), 'detectors', 'humanize_cli.py');
-
-
-
-        const pythonCmd = process.env.PYTHON_PATH || 'python';
-        const pythonProcess = spawn(pythonCmd, [scriptPath]);
-
-
-        const inputData = JSON.stringify({
-            text: content,
-            p_syn: conversation.synonymIntensity,
-            p_trans: conversation.transitionFrequency,
-            preserve_linebreaks: true
-        });
-
-        let scriptOutput = '';
-        let scriptError = '';
-
-        const humanizedText = await new Promise<string>((resolve, reject) => {
-            let timeoutId: NodeJS.Timeout;
-
-            // Set a 30-second timeout to prevent indefinite hanging
-            timeoutId = setTimeout(() => {
-                console.error('Rephrase timed out');
-                pythonProcess.kill();
-                resolve(content); // Fallback to original content
-            }, 30000);
-
-            pythonProcess.stdout.on('data', (data) => {
-                scriptOutput += data.toString();
-            });
-
-            pythonProcess.stderr.on('data', (data) => {
-                scriptError += data.toString();
-            });
-
-            pythonProcess.on('close', (code) => {
-                clearTimeout(timeoutId);
-
-                if (code !== 0) {
-                    console.error('Humanizer script error output:', scriptError);
-                    console.warn('Falling back to original content due to humanizer script failure.');
-                    return resolve(content);
-                }
-
-                try {
-                    // Script might print other things (like NLTK download logs) before the JSON
-                    // Find the last JSON object in the output
-                    const lines = scriptOutput.trim().split('\n');
-                    let jsonResult = null;
-
-                    // Try parsing from the last line backwards
-                    for (let i = lines.length - 1; i >= 0; i--) {
-                        try {
-                            const trimmed = lines[i].trim();
-                            if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-                                jsonResult = JSON.parse(trimmed);
-                                break;
-                            }
-                        } catch (e) {
-                            continue;
-                        }
-                    }
-
-                    if (!jsonResult) {
-                        try {
-                            // Try parsing the whole output if splitting by newline failed
-                            jsonResult = JSON.parse(scriptOutput);
-                        } catch (e) {
-                            // Failed
-                        }
-                    }
-
-                    if (jsonResult && jsonResult.error) {
-                        console.error('Humanizer script returned error:', jsonResult.error);
-                        resolve(content);
-                    } else if (jsonResult && jsonResult.humanized_text) {
-                        resolve(jsonResult.humanized_text);
-                    } else {
-                        console.warn('No valid JSON output found from humanizer');
-                        resolve(content);
-                    }
-                } catch (e) {
-                    console.error('Failed to parse humanizer output:', e);
-                    resolve(content);
-                }
-            });
-
-            // Write input and end stream
-            pythonProcess.stdin.write(inputData);
-            pythonProcess.stdin.end();
-        });
+        const humanizedText = humanizeText(
+            content,
+            conversation.synonymIntensity,
+            conversation.transitionFrequency
+        )
 
         // 2. Local Analysis (Check)
         const analysis = await detectAI(humanizedText)

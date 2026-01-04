@@ -16,15 +16,25 @@ export interface AnalysisResult {
 }
 
 async function getDetectorSettings() {
+    // 1. Try Environment Variables (Preferred for Container/Cloud)
+    // These are injected at runtime in Docker/Digital Ocean
+    if (process.env.DETECTION_API_URL && process.env.PLAGIARISM_API_URL) {
+        return {
+            detectionApiUrl: process.env.DETECTION_API_URL,
+            plagiarismApiUrl: process.env.PLAGIARISM_API_URL
+        }
+    }
+
+    // 2. Try Database Settings (Admin UI override)
     const settings = await prisma.systemSettings.findUnique({
         where: { id: 'default' },
         select: { detectionApiUrl: true, plagiarismApiUrl: true }
     })
 
     return {
-        // User provided default: http://127.0.0.1:1234/detect
-        detectionApiUrl: settings?.detectionApiUrl ?? 'http://127.0.0.1:1234/detect',
-        plagiarismApiUrl: settings?.plagiarismApiUrl ?? 'http://127.0.0.1:5000/plagiarism'
+        // DB Setting -> Env Var Fallback -> Localhost Default
+        detectionApiUrl: settings?.detectionApiUrl ?? process.env.DETECTION_API_URL ?? 'http://127.0.0.1:1234/detect',
+        plagiarismApiUrl: settings?.plagiarismApiUrl ?? process.env.PLAGIARISM_API_URL ?? 'http://127.0.0.1:5000/plagiarism'
     }
 }
 

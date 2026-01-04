@@ -42,8 +42,8 @@ export async function GET() {
                     temperature: 0.3,
                     rephraseTemperature: 0.8,
                     topP: 0.9,
-                    detectionApiUrl: 'http://127.0.0.1:5000/detection',
-                    plagiarismApiUrl: 'http://127.0.0.1:5000/plagiarism',
+                    detectionApiUrl: process.env.DETECTION_API_URL || 'http://127.0.0.1:5000/detection',
+                    plagiarismApiUrl: process.env.PLAGIARISM_API_URL || 'http://127.0.0.1:5000/plagiarism',
                 },
             })
         }
@@ -105,8 +105,8 @@ export async function PUT(request: NextRequest) {
                 temperature: temperature || 0.3,
                 rephraseTemperature: rephraseTemperature || 0.8,
                 topP: topP || 0.9,
-                detectionApiUrl: detectionApiUrl || 'http://127.0.0.1:5000/detection',
-                plagiarismApiUrl: plagiarismApiUrl || 'http://127.0.0.1:5000/plagiarism',
+                detectionApiUrl: detectionApiUrl || process.env.DETECTION_API_URL || 'http://127.0.0.1:5000/detection',
+                plagiarismApiUrl: plagiarismApiUrl || process.env.PLAGIARISM_API_URL || 'http://127.0.0.1:5000/plagiarism',
             },
         })
 
