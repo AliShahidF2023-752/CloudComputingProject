@@ -172,8 +172,9 @@ function replaceSynonyms(sentence: string, intensity: number): string {
                 const newVb = doc.verbs().find((v: any) => v.text().includes(choice) || v.text().includes(choice.split(' ')[0]))
 
                 if (newVb) {
-                    if (isPast) newVb.toPastTense()
-                    if (isGerund) newVb.toGerund()
+                    const anyVb = newVb as any;
+                    if (isPast) anyVb.toPastTense()
+                    if (isGerund) anyVb.toGerund()
                 }
             }
         }
