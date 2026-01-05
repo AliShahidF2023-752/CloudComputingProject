@@ -93,20 +93,20 @@ export default function SettingsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-            <div className="max-w-2xl mx-auto p-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+            <div className="max-w-2xl mx-auto p-6 animate-fade-in">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => router.push('/dashboard')}
-                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all"
+                        className="p-2 rounded-xl glass hover:glass-strong text-gray-400 hover:text-white transition-all"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
@@ -118,13 +118,13 @@ export default function SettingsPage() {
 
                 {/* Success message */}
                 {saved && (
-                    <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6">
+                    <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6 animate-scale-in">
                         <p className="text-green-400">Settings saved successfully!</p>
                     </div>
                 )}
 
                 {/* Profile section */}
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-6">
+                <div className="glass-strong rounded-2xl p-6 border border-white/10 mb-6">
                     <div className="flex items-center gap-3 mb-6">
                         <User className="w-5 h-5 text-purple-400" />
                         <h2 className="text-lg font-semibold text-white">Profile Information</h2>
@@ -137,7 +137,7 @@ export default function SettingsPage() {
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full px-4 py-3 glass border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
                             />
                         </div>
 
@@ -147,7 +147,7 @@ export default function SettingsPage() {
                                 type="email"
                                 value={user?.email || ''}
                                 disabled
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-500 cursor-not-allowed"
+                                className="w-full px-4 py-3 glass border border-white/10 rounded-xl text-gray-500 cursor-not-allowed"
                             />
                             <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                         </div>
@@ -155,7 +155,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Education section */}
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-6">
+                <div className="glass-strong rounded-2xl p-6 border border-white/10 mb-6">
                     <div className="flex items-center gap-3 mb-6">
                         <GraduationCap className="w-5 h-5 text-purple-400" />
                         <h2 className="text-lg font-semibold text-white">Education & Role</h2>
@@ -170,8 +170,8 @@ export default function SettingsPage() {
                                         key={type.id}
                                         onClick={() => setFormData({ ...formData, userType: type.id })}
                                         className={`p-3 rounded-xl border transition-all ${formData.userType === type.id
-                                            ? 'border-purple-500 bg-purple-500/20 text-white'
-                                            : 'border-white/10 bg-white/5 text-gray-400 hover:bg-white/10'
+                                            ? 'border-purple-500 glass-strong text-white'
+                                            : 'border-white/10 glass text-gray-400 hover:glass-strong'
                                             }`}
                                     >
                                         {type.label}
@@ -188,8 +188,8 @@ export default function SettingsPage() {
                                         key={level.id}
                                         onClick={() => setFormData({ ...formData, educationLevel: level.id })}
                                         className={`p-3 rounded-xl border transition-all ${formData.educationLevel === level.id
-                                            ? 'border-purple-500 bg-purple-500/20 text-white'
-                                            : 'border-white/10 bg-white/5 text-gray-400 hover:bg-white/10'
+                                            ? 'border-purple-500 glass-strong text-white'
+                                            : 'border-white/10 glass text-gray-400 hover:glass-strong'
                                             }`}
                                     >
                                         {level.label}
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Tone section */}
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-6">
+                <div className="glass-strong rounded-2xl p-6 border border-white/10 mb-6">
                     <div className="flex items-center gap-3 mb-6">
                         <MessageSquare className="w-5 h-5 text-purple-400" />
                         <h2 className="text-lg font-semibold text-white">Default Writing Tone</h2>
@@ -213,8 +213,8 @@ export default function SettingsPage() {
                                 key={tone.id}
                                 onClick={() => setFormData({ ...formData, defaultTone: tone.id })}
                                 className={`p-3 rounded-xl border transition-all ${formData.defaultTone === tone.id
-                                    ? 'border-purple-500 bg-purple-500/20 text-white'
-                                    : 'border-white/10 bg-white/5 text-gray-400 hover:bg-white/10'
+                                    ? 'border-purple-500 glass-strong text-white'
+                                    : 'border-white/10 glass text-gray-400 hover:glass-strong'
                                     }`}
                             >
                                 {tone.label}
@@ -227,7 +227,7 @@ export default function SettingsPage() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 btn-glow"
                 >
                     {saving ? (
                         <>
