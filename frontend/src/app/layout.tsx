@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ContentGuard AI - AI & Plagiarism Detection Tool",
-  description: "Detect AI-generated content and plagiarism instantly. Get detailed reports with highlighted sections and one-click rephrasing to ensure your content is original.",
-  keywords: "AI detection, plagiarism checker, content verification, AI content detector, originality checker",
+  title: "Rephraze - AI Content Detection & Smart Rephrasing",
+  description: "Transform AI-generated content into authentic, human-written text. Detect AI patterns and plagiarism instantly with detailed analysis and intelligent rephrasing suggestions.",
+  keywords: "AI detection, plagiarism checker, content rephrasing, AI content detector, text humanization, originality checker",
 };
 
 export default function RootLayout({
