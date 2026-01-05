@@ -209,11 +209,11 @@ export default function AdminDashboard() {
                             </button>
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                    <Shield className="w-5 h-5 text-white" />
+                                    <Type className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
                                     <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>
-                                    <p className="text-xs text-gray-400">ContentGuard AI</p>
+                                    <p className="text-xs text-gray-400">Rephraze</p>
                                 </div>
                             </div>
                         </div>
