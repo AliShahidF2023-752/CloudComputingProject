@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, MessageSquare, Settings, LogOut, Trash2, Search, Type, X, Menu } from 'lucide-react'
+import { Plus, MessageSquare, Settings, LogOut, Trash2, Search, Shield, X, Menu } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ChatInterface from '@/components/chat/ChatInterface'
 
@@ -128,18 +128,18 @@ export default function DashboardContent() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
             </div>
         )
     }
 
     return (
-        <div className="h-[100dvh] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex overflow-hidden relative">
+        <div className="h-[100dvh] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex overflow-hidden relative">
             {/* Mobile sidebar toggle */}
             <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg glass-strong border border-white/10 text-white shadow-lg"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-slate-900/90 border border-white/10 text-white shadow-lg backdrop-blur-md"
             >
                 {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -155,23 +155,23 @@ export default function DashboardContent() {
             {/* Sidebar */}
             <div
                 className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    } lg:translate-x-0 fixed lg:relative z-50 lg:z-auto w-[280px] lg:w-80 h-full glass-strong border-r border-white/10 flex flex-col transition-all duration-300 ease-out shadow-2xl lg:shadow-none`}
+                    } lg:translate-x-0 fixed lg:relative z-50 lg:z-auto w-[280px] lg:w-80 h-full bg-slate-900/95 backdrop-blur-xl border-r border-white/10 flex flex-col transition-transform duration-300 ease-out shadow-2xl lg:shadow-none`}
             >
                 {/* Header */}
                 <div className="p-4 border-b border-white/10">
-                    <div className="flex items-center gap-3 mb-4 animate-fade-in">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center animate-glow">
-                            <Type className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold text-white gradient-text">Rephraze</h1>
-                            <p className="text-xs text-gray-400">AI Content Transformer</p>
+                            <h1 className="text-lg font-bold text-white">ContentGuard AI</h1>
+                            <p className="text-xs text-gray-400">AI & Plagiarism Detector</p>
                         </div>
                     </div>
 
                     <button
                         onClick={handleNewConversation}
-                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium flex items-center justify-center gap-2 transition-all duration-300 btn-glow"
+                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium flex items-center justify-center gap-2 transition-all duration-300"
                     >
                         <Plus className="w-5 h-5" />
                         New Analysis
@@ -187,7 +187,7 @@ export default function DashboardContent() {
                             placeholder="Search conversations..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 glass border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                     </div>
                 </div>
@@ -202,7 +202,7 @@ export default function DashboardContent() {
                         </div>
                     ) : (
                         <div className="space-y-1">
-                            {filteredConversations.map((conversation, index) => (
+                            {filteredConversations.map((conversation) => (
                                 <button
                                     key={conversation.id}
                                     onClick={() => {
@@ -210,10 +210,9 @@ export default function DashboardContent() {
                                         router.push(`/dashboard?c=${conversation.id}`)
                                         if (window.innerWidth < 1024) setSidebarOpen(false)
                                     }}
-                                    style={{ animationDelay: `${index * 50}ms` }}
-                                    className={`w-full p-3 rounded-xl text-left transition-all duration-200 group animate-fade-in ${selectedConversation === conversation.id
+                                    className={`w-full p-3 rounded-xl text-left transition-all duration-200 group ${selectedConversation === conversation.id
                                         ? 'bg-purple-600/30 border border-purple-500/50'
-                                        : 'hover:glass border border-transparent'
+                                        : 'hover:bg-white/5 border border-transparent'
                                         }`}
                                 >
                                     <div className="flex items-start justify-between">
@@ -221,7 +220,7 @@ export default function DashboardContent() {
                                             <p className="text-white font-medium truncate">{conversation.title}</p>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-xs text-gray-500">{formatDate(conversation.updatedAt)}</span>
-                                                <span className="px-2 py-0.5 text-xs rounded-full glass text-gray-400 capitalize">
+                                                <span className="px-2 py-0.5 text-xs rounded-full bg-white/10 text-gray-400 capitalize">
                                                     {conversation.tone}
                                                 </span>
                                             </div>
@@ -257,7 +256,7 @@ export default function DashboardContent() {
                             onClick={() => router.push('/admin')}
                             className="w-full mb-3 py-2 px-4 rounded-xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 text-purple-400 hover:bg-purple-600/30 flex items-center justify-center gap-2 transition-all"
                         >
-                            <Type className="w-4 h-4" />
+                            <Shield className="w-4 h-4" />
                             Admin Dashboard
                         </button>
                     )}
@@ -265,14 +264,14 @@ export default function DashboardContent() {
                     <div className="flex gap-2">
                         <button
                             onClick={() => router.push('/settings')}
-                            className="flex-1 py-2 px-4 rounded-xl glass hover:glass-strong text-gray-400 hover:text-white flex items-center justify-center gap-2 transition-all"
+                            className="flex-1 py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center gap-2 transition-all"
                         >
                             <Settings className="w-4 h-4" />
                             Settings
                         </button>
                         <button
                             onClick={handleLogout}
-                            className="py-2 px-4 rounded-xl glass hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all"
+                            className="py-2 px-4 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all"
                         >
                             <LogOut className="w-4 h-4" />
                         </button>
@@ -288,19 +287,19 @@ export default function DashboardContent() {
                         onConversationUpdate={fetchConversations}
                     />
                 ) : (
-                    <div className="flex-1 flex items-center justify-center p-8 animate-fade-in">
+                    <div className="flex-1 flex items-center justify-center p-8">
                         <div className="text-center max-w-md">
-                            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-6 animate-glow">
-                                <Type className="w-10 h-10 text-purple-400" />
+                            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-6">
+                                <Shield className="w-10 h-10 text-purple-400" />
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-3">Welcome to Rephraze</h2>
+                            <h2 className="text-2xl font-bold text-white mb-3">Welcome to ContentGuard AI</h2>
                             <p className="text-gray-400 mb-6">
-                                Transform AI-generated content into authentic, human-written text.
-                                Get instant analysis and intelligent rephrasing suggestions.
+                                Analyze your content for AI-generated text and potential plagiarism.
+                                Get detailed reports and rephrase suggestions.
                             </p>
                             <button
                                 onClick={handleNewConversation}
-                                className="py-3 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium flex items-center gap-2 mx-auto transition-all duration-300 btn-glow"
+                                className="py-3 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium flex items-center gap-2 mx-auto transition-all duration-300"
                             >
                                 <Plus className="w-5 h-5" />
                                 Start New Analysis
