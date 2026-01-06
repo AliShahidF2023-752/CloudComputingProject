@@ -158,9 +158,7 @@ export default function HomePage() {
             </div>
             <span className="text-white font-semibold">Rephraze</span>
           </div>
-          <p className="text-gray-500 text-sm">
-            © 2024 Rephraze. All rights reserved.
-          </p>
+
         </div>
       </footer>
     </div>
