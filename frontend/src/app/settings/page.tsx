@@ -39,6 +39,7 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
+    const [error, setError] = useState('')
     const [formData, setFormData] = useState({
         name: '',
         educationLevel: '',
@@ -72,6 +73,7 @@ export default function SettingsPage() {
 
     const handleSave = async () => {
         setSaving(true)
+        setError('')
         try {
             const res = await fetch('/api/user/settings', {
                 method: 'PUT',
@@ -83,9 +85,12 @@ export default function SettingsPage() {
             if (data.success) {
                 setSaved(true)
                 setTimeout(() => setSaved(false), 3000)
+            } else {
+                setError(data.error || 'Failed to save settings')
             }
         } catch (error) {
             console.error('Failed to save settings:', error)
+            setError('Something went wrong. Please try again.')
         } finally {
             setSaving(false)
         }
@@ -120,6 +125,13 @@ export default function SettingsPage() {
                 {saved && (
                     <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6 animate-scale-in">
                         <p className="text-green-400">Settings saved successfully!</p>
+                    </div>
+                )}
+
+                {/* Error message */}
+                {error && (
+                    <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 mb-6 animate-scale-in">
+                        <p className="text-red-400">{error}</p>
                     </div>
                 )}
 
