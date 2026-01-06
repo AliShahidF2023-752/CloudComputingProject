@@ -12,11 +12,8 @@ import {
     UserCircle,
     BarChart3,
     Settings,
-    CheckCircle,
-    XCircle,
     Loader2,
     Save,
-    RefreshCw,
     Type,
     Smartphone,
 } from 'lucide-react'
@@ -108,8 +105,6 @@ export default function AdminDashboard() {
     })
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [testing, setTesting] = useState(false)
-    const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'failed'>('unknown')
     const [savedMessage, setSavedMessage] = useState('')
 
     useEffect(() => {
@@ -144,27 +139,7 @@ export default function AdminDashboard() {
         fetchData()
     }, [])
 
-    const handleTestConnection = async () => {
-        setTesting(true)
-        setConnectionStatus('unknown')
-        try {
-            const res = await fetch('/api/admin/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ llmApiUrl: settings.llmApiUrl }),
-            })
-            const data = await res.json()
-            if (data.success && data.data.connected) {
-                setConnectionStatus('connected')
-            } else {
-                setConnectionStatus('failed')
-            }
-        } catch {
-            setConnectionStatus('failed')
-        } finally {
-            setTesting(false)
-        }
-    }
+
 
     const handleSaveSettings = async () => {
         setSaving(true)

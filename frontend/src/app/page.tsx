@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Type, Check, Sparkles, Zap, Lock, ArrowRight } from 'lucide-react'
+import { Type, Sparkles, Zap, Lock, ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
   return (

@@ -1,23 +1,36 @@
-# Base image
 FROM python:3.10-slim
 
-# Working directory
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    unzip \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libxss1 \
+    libasound2 \
+    libx11-xcb1 \
+    libgtk-3-0 \
+    libgbm1 \
+    libdrm2 \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+
 WORKDIR /app
 
-# Install system dependencies if needed (e.g. for some pip packages)
-# RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements
 COPY requirements.txt .
-
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy logic
-COPY app.py .
+COPY plagiarism_api.py .
 
-# Expose port
 EXPOSE 5000
 
-# Start command
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["python", "plagiarism_api.py"]

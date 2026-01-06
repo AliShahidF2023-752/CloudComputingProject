@@ -3,7 +3,7 @@ import prisma from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 // GET /api/admin/whatsapp/users - List users with stats
-export async function GET(req: NextRequest) {
+export async function GET() {
     // Check for Admin role
     const session = await getSession()
     if (session?.role !== 'ADMIN') {
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({ users, totalRequests, recentLogs })
 
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: 'DB Error' }, { status: 500 })
     }
 }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         })
 
         return NextResponse.json(user)
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: 'Update Failed' }, { status: 500 })
     }
 }

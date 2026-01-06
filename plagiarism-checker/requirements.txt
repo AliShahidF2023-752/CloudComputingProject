@@ -1,6 +1,5 @@
-fastapi
-uvicorn
-pydantic
-requests
-beautifulsoup4
-googlesearch-python
+# Plagiarism Checker API Dependencies
+flask>=3.0.0
+nltk>=3.8.0
+selenium>=4.15.0
+webdriver-manager>=4.0.0

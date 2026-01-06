@@ -51,7 +51,7 @@ export default function ChatInterface({ conversationId, onConversationUpdate }: 
     const [showSettings, setShowSettings] = useState(false)
     const [synonymIntensity, setSynonymIntensity] = useState(0.2)
     const [transitionFrequency, setTransitionFrequency] = useState(0.2)
-    const [savingSettings, setSavingSettings] = useState(false)
+
     const [analyzing, setAnalyzing] = useState(false)
     const [rephrasing, setRephrasing] = useState(false)
     const [copied, setCopied] = useState(false)
@@ -183,7 +183,7 @@ export default function ChatInterface({ conversationId, onConversationUpdate }: 
     }
 
     const saveSettings = async (syn: number, trans: number) => {
-        setSavingSettings(true)
+
         try {
             await fetch(`/api/conversations/${conversationId}`, {
                 method: 'PUT',
@@ -204,7 +204,6 @@ export default function ChatInterface({ conversationId, onConversationUpdate }: 
         } catch (err) {
             console.error('Failed to save settings', err)
         } finally {
-            setSavingSettings(false)
         }
     }
 
@@ -321,7 +320,7 @@ export default function ChatInterface({ conversationId, onConversationUpdate }: 
                         </div>
                     )}
 
-                    {conversation?.messages.map((message, index) => {
+                    {conversation?.messages.map((message) => {
                         const analysisData = parseAnalysisData(message.analysisData)
 
                         if (message.type === 'USER_INPUT') {

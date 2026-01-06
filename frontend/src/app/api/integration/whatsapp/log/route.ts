@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true })
 
-    } catch (e) {
+    } catch {
         // Logging failure shouldn't stop the flow
         return NextResponse.json({ success: false }, { status: 500 })
     }

@@ -37,10 +37,8 @@ export async function POST(request: NextRequest) {
         let scriptOutput = '';
 
         const humanizedText = await new Promise<string>((resolve) => {
-            let timeoutId: NodeJS.Timeout;
-
             // 30s timeout
-            timeoutId = setTimeout(() => {
+            const timeoutId: NodeJS.Timeout = setTimeout(() => {
                 pythonProcess.kill();
                 resolve("Error: Rephrase Timed Out");
             }, 30000);
@@ -49,7 +47,7 @@ export async function POST(request: NextRequest) {
                 scriptOutput += data.toString();
             });
 
-            pythonProcess.on('close', (code) => {
+            pythonProcess.on('close', () => {
                 clearTimeout(timeoutId);
 
                 try {
@@ -63,7 +61,7 @@ export async function POST(request: NextRequest) {
                                 jsonResult = JSON.parse(trimmed);
                                 break;
                             }
-                        } catch (e) {
+                        } catch {
                             continue;
                         }
                     }
@@ -73,7 +71,7 @@ export async function POST(request: NextRequest) {
                     } else {
                         resolve(content); // Fallback
                     }
-                } catch (e) {
+                } catch {
                     resolve(content);
                 }
             });

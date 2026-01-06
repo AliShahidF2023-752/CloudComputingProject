@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json()
         console.log('[API] Request body keys:', Object.keys(body));
-        const { conversationId, content, tone } = body;
+        const { conversationId, content } = body;
 
         if (!content || !content.trim()) {
             console.log('[API] Missing content');
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
                     outputData += message;
                 });
 
-                pyshell.end((err, code, signal) => {
+                pyshell.end((err) => {
                     if (err) return reject(err);
                     try {
                         const result = JSON.parse(outputData);

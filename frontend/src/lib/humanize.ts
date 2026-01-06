@@ -303,7 +303,7 @@ function expandContractions(sentence: string): string {
     const wholePattern = new RegExp(`(?:(\`\`)\\s*)?(?<word>(?:${alt}))(?:\\s*(''))?`, 'gi')
 
     // 1) Apply whole-word contractions
-    let newSentence = sentence.replace(wholePattern, (match, openTok, word, closeTok) => {
+    const newSentence = sentence.replace(wholePattern, (_match, openTok, word, closeTok) => {
         const open = openTok || ''
         const close = closeTok || ''
         const key = word.toLowerCase()
@@ -391,7 +391,7 @@ function replaceSynonyms(sentence: string, pSyn: number): string {
     const doc = nlp(sentence)
 
     // Process all terms
-    doc.terms().forEach((term: any) => {
+    doc.terms().forEach((term: ReturnType<typeof nlp>['terms'] extends () => infer R ? R : never) => {
         const text = term.text()
 
         // Skip citation placeholders
@@ -455,7 +455,7 @@ function minimalRewriting(text: string, pSyn: number, pTrans: number): string {
     const doc = nlp(text)
     const sentences = doc.sentences().json()
 
-    const outSentences = sentences.map((s: any) => {
+    const outSentences = sentences.map((s: { text: string }) => {
         return minimalHumanizeLine(s.text, pSyn, pTrans)
     })
 
@@ -489,7 +489,7 @@ export async function humanizeText(
     const { text: noRefsText, map } = extractCitations(text)
 
     // 2. Line-by-Line / Sentence-by-Sentence Rewrite
-    let processed = preserveLinebreaksRewrite(noRefsText, synonymIntensity, transitionFrequency)
+    const processed = preserveLinebreaksRewrite(noRefsText, synonymIntensity, transitionFrequency)
 
     // 3. Restore Citations
     let finalText = restoreCitations(processed, map)
@@ -511,7 +511,7 @@ export function humanizeTextSync(
     transitionFrequency: number = 0.2
 ): string {
     const { text: noRefsText, map } = extractCitations(text)
-    let processed = preserveLinebreaksRewrite(noRefsText, synonymIntensity, transitionFrequency)
+    const processed = preserveLinebreaksRewrite(noRefsText, synonymIntensity, transitionFrequency)
     let finalText = restoreCitations(processed, map)
 
     finalText = finalText.replace(/[ \t]+([.,;:!?])/g, '$1')

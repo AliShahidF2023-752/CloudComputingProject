@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const { conversationId, content, tone } = await request.json()
+        const { conversationId, content } = await request.json()
 
         if (!content || !content.trim()) {
             return NextResponse.json(
@@ -24,13 +24,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Get user info for context
-        const user = await prisma.user.findUnique({
-            where: { id: session.userId },
-            select: { educationLevel: true, userType: true },
-        })
 
-        const userContext = `${user?.userType || 'user'} at ${user?.educationLevel || 'general'} level`
 
         // Verify conversation belongs to user
         const conversation = await prisma.conversation.findFirst({

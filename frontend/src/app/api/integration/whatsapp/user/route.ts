@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(user)
 
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: 'DB Error' }, { status: 500 })
     }
 }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         })
 
         return NextResponse.json(user)
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: 'Update Failed' }, { status: 500 })
     }
 }

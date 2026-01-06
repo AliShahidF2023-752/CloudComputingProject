@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Shield, Ban, CheckCircle, Activity, Smartphone } from 'lucide-react'
+import { Loader2, Ban, Activity, Smartphone } from 'lucide-react'
 
 interface WhatsAppUser {
     phoneNumber: string
@@ -12,16 +12,8 @@ interface WhatsAppUser {
     _count?: { logs: number }
 }
 
-interface WhatsAppLog {
-    id: string
-    command: string
-    processedAt: string
-    processingTime: number
-}
-
 export default function WhatsAppDashboard() {
     const [users, setUsers] = useState<WhatsAppUser[]>([])
-    const [logs, setLogs] = useState<WhatsAppLog[]>([])
     const [loading, setLoading] = useState(true)
 
     const fetchData = async () => {
@@ -31,7 +23,6 @@ export default function WhatsAppDashboard() {
             const data = await res.json()
             if (data.users) {
                 setUsers(data.users)
-                setLogs(data.recentLogs)
             }
         } catch (e) {
             console.error(e)
@@ -127,8 +118,8 @@ export default function WhatsAppDashboard() {
                                         <button
                                             onClick={() => toggleBlock(user.phoneNumber, user.isBlocked)}
                                             className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${user.isBlocked
-                                                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                                                    : 'bg-red-600 hover:bg-red-700 text-white'
+                                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                                : 'bg-red-600 hover:bg-red-700 text-white'
                                                 }`}
                                         >
                                             {user.isBlocked ? 'Unblock' : 'Block'}

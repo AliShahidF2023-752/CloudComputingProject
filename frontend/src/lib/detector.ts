@@ -69,7 +69,7 @@ export async function detectAI(text: string): Promise<AnalysisResult> {
             let totalAiLength = 0
 
             if (aiLines.length > 0) {
-                aiLines.forEach((line: any) => {
+                aiLines.forEach((line: { text: string; start: number; end: number; confidence: number }) => {
                     const start = line.start
                     const end = line.end
                     const confidence = line.confidence
@@ -124,7 +124,7 @@ export async function detectAI(text: string): Promise<AnalysisResult> {
 
             // Add parsed plagiarism highlights
             if (data.highlights && Array.isArray(data.highlights)) {
-                data.highlights.forEach((h: any) => {
+                data.highlights.forEach((h: { text: string; start: number; end: number; confidence?: number; sources?: string[] }) => {
                     result.highlights.push({
                         type: 'plagiarism',
                         start: h.start,
@@ -176,7 +176,6 @@ function resolveOverlaps(highlights: AnalysisResult['highlights']): AnalysisResu
     for (let i = 0; i < sortedPoints.length - 1; i++) {
         const start = sortedPoints[i]
         const end = sortedPoints[i + 1]
-        const mid = (start + end) / 2
 
         // Find all highlights that cover this interval
         const activeTypes = new Set<string>()

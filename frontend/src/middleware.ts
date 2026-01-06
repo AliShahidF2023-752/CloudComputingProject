@@ -15,7 +15,6 @@ export async function middleware(request: NextRequest) {
     // Check if user is authenticated
     let isAuthenticated = false
     let userRole = 'USER'
-    let isOnboarded = true
 
     if (token) {
         try {

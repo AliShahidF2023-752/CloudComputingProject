@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
                     },
                 })
             }
-        } catch (fetchError) {
+        } catch {
             return NextResponse.json({
                 success: true,
                 data: {
