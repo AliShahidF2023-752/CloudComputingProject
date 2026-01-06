@@ -24,8 +24,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-
-
         // Verify conversation belongs to user
         const conversation = await prisma.conversation.findFirst({
             where: {

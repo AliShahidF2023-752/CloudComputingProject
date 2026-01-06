@@ -6,13 +6,13 @@ import { PythonShell } from 'python-shell'
 import path from 'path'
 
 export async function POST(request: NextRequest) {
-    console.log('[API] Rephrase request received');
+
     try {
         const session = await getSession()
-        console.log('[API] Session:', session ? 'Authenticated' : 'No session');
+
 
         if (!session) {
-            console.log('[API] Authentication failed');
+
             return NextResponse.json(
                 { success: false, error: 'Not authenticated' },
                 { status: 401 }
@@ -20,11 +20,11 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        console.log('[API] Request body keys:', Object.keys(body));
+
         const { conversationId, content } = body;
 
         if (!content || !content.trim()) {
-            console.log('[API] Missing content');
+
             return NextResponse.json(
                 { success: false, error: 'Content is required' },
                 { status: 400 }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
             where: { id: session.userId },
             select: { educationLevel: true, userType: true },
         })
-        console.log('[API] User found:', user?.userType);
+
 
         // Verify conversation belongs to user
         const conversation = await prisma.conversation.findFirst({
@@ -47,19 +47,16 @@ export async function POST(request: NextRequest) {
         })
 
         if (!conversation) {
-            console.log('[API] Conversation not found or access denied. ID:', conversationId);
+
             return NextResponse.json(
                 { success: false, error: 'Conversation not found' },
                 { status: 404 }
             )
         }
-        console.log('[API] Conversation params:', {
-            synonymIntensity: conversation.synonymIntensity,
-            transitionFrequency: conversation.transitionFrequency
-        });
+
 
         // 1. Python-based Humanization
-        console.log('[API] Starting humanization via Python script...');
+
         const startTime = Date.now();
 
         // Helper to run Python script
@@ -109,7 +106,7 @@ export async function POST(request: NextRequest) {
         let currentIntensity = conversation.synonymIntensity || 0.4;
         const currentFrequency = conversation.transitionFrequency || 0.3;
 
-        console.log(`[API] Initial Intensity: ${currentIntensity}, Frequency: ${currentFrequency}`);
+
 
         let humanizedText = await runHumanizer(content, currentIntensity, currentFrequency);
 
@@ -118,18 +115,17 @@ export async function POST(request: NextRequest) {
         while (humanizedText === content && attempts < 2 && currentIntensity < 1.0) {
             attempts++;
             currentIntensity = Math.min(1.0, currentIntensity + 0.3);
-            console.log(`[API] No changes detected. Retrying with intensity: ${currentIntensity}`);
+
 
             humanizedText = await runHumanizer(content, currentIntensity, currentFrequency);
         }
 
-        console.log('[API] Humanization complete. Time:', Date.now() - startTime, 'ms');
-        console.log('[API] Original length:', content.length, 'New length:', humanizedText.length);
+
 
         // 2. Local Analysis (Check)
-        console.log('[API] Running AI detection on result...');
+
         const analysis = await detectAI(humanizedText)
-        console.log('[API] AI Detection complete. Score:', analysis.aiContentPercentage);
+
 
         // Save rephrased message
         const rephrasedMessage = await prisma.message.create({
@@ -141,7 +137,7 @@ export async function POST(request: NextRequest) {
                 charCount: humanizedText.length,
             },
         })
-        console.log('[API] Message saved:', rephrasedMessage.id);
+
 
         // Update conversation timestamp
         await prisma.conversation.update({

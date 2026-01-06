@@ -47,9 +47,18 @@ export default function DashboardContent() {
             try {
                 // Fetch user
                 const userRes = await fetch('/api/auth/me')
+
+                if (userRes.status === 401) {
+                    router.push('/login')
+                    return
+                }
+
                 const userData = await userRes.json()
                 if (userData.success) {
                     setUser(userData.data)
+                } else {
+                    // Handle other errors or redirect if needed
+                    console.error('Failed to get user data:', userData.error)
                 }
 
                 // Fetch conversations
